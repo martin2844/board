@@ -1,14 +1,10 @@
-import { auth } from "@/auth";
+import { getThreads } from "@/services/thread";
+import ThreadPage from "@/components/pagesContent/Thread";
 
-import Link from "next/link";
 const HomePage = async () => {
-  const session = await auth();
+  const threads = await getThreads(1, 10)
   return (
-    <div>
-      <h1>Hello</h1>
-      {!session && <Link href="/api/auth/signin">Sign In</Link>}
-      {session && <p>{session?.user?.name}</p>}
-    </div>
+    <ThreadPage threads={threads.threads} currentPage={1} totalPages={threads.totalPages} />
   );
 };
 

@@ -4,6 +4,8 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,9 +21,13 @@ export default function RootLayout({
     <html lang="en">
       <body
         style={{ minHeight: "100vh" }}
-        className="flex flex-col w-full h-full items-center justify-center"
+        className="bg-[#f0f8f0] font-mono min-h-screen"
       >
-        {children}
+        <Header />
+        <div className="max-w-6xl my-8 mx-auto min-h-[calc(100vh-212px)]">
+          {children}
+        </div>
+        <Footer />
       </body>
     </html>
   );
