@@ -11,7 +11,7 @@ exports.up = function(knex) {
             table.string('image_url');
             table.string('image_name');
             table.string('image_size');
-            table.string('image_resolution');
+            table.string('image_dimensions');
             table.string('user_hash')
             table.timestamps(true, true);
         }),
@@ -19,6 +19,10 @@ exports.up = function(knex) {
             table.increments('id').primary();
             table.integer('thread_id').references('id').inTable('threads');
             table.text('content');
+            table.string('image_url');
+            table.string('image_name');
+            table.string('image_size');
+            table.string('image_dimensions');
             table.string('user_hash');
             table.timestamps(true, true);
         }),

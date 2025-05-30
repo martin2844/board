@@ -1,4 +1,5 @@
 import type { Thread } from "@/types/thread"
+import db from "@/lib/db"
 
 const mockThreads: Thread[] = [
     {
@@ -129,4 +130,10 @@ export function getThreads(page = 1, perPage = 10) {
 
 export function getThread(id: number): Thread | undefined {
     return mockThreads.find((thread) => thread.id === id)
+}
+
+export function createThread(thread: Thread) {
+    return db.thread.create({
+        data: thread,
+    })
 }
