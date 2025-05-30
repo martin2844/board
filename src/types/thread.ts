@@ -1,5 +1,3 @@
-import { User } from "./user";
-
 export type ImageAttachment = {
     filename: string
     url: string
@@ -20,6 +18,13 @@ export type Thread = {
     content: string
     createdAt: Date
     image?: ImageAttachment
-    author: User;
+    user_hash: string
     replies: Reply[]
+}
+
+export type PaginatedThreads = {
+    threads: Thread[]
+    currentPage: number
+    totalPages: number
+    totalCount: number
 }

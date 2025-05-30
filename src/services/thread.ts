@@ -1,139 +1,176 @@
-import type { Thread } from "@/types/thread"
+import type { Thread, PaginatedThreads } from "@/types/thread"
 import db from "@/lib/db"
 
-const mockThreads: Thread[] = [
-    {
-        id: 8103257,
-        subject: "Animation scenery wallpaper",
-        content: "Post your favorite animated scenery wallpapers. I'll start with this beautiful castle scene.",
-        createdAt: new Date("2025-05-15T18:10:22"),
-        image: {
-            filename: "Cliffside-Tower.png",
-            url: "/placeholder.svg?height=300&width=400",
-            size: 2190000,
-            dimensions: "1920x1080",
-        },
-        replies: [
-            {
-                id: 8103406,
-                content: "Very nice OP, but it would be better if these were labelled.",
-                createdAt: new Date("2025-05-16T05:54:08"),
-                image: {
-                    filename: "the_port_of_hort.jpg",
-                    url: "/placeholder.svg?height=200&width=300",
-                    size: 442000,
-                    dimensions: "1920x1038",
-                },
-            },
-        ],
-    },
-    {
-        id: 8103433,
-        subject: "Landscape Photography",
-        content: "Share your best landscape shots. Nature is beautiful.",
-        createdAt: new Date("2025-05-16T14:38:11"),
-        image: {
-            filename: "17316266990710.jpg",
-            url: "/placeholder.svg?height=250&width=350",
-            size: 2060000,
-            dimensions: "3840x2160",
-        },
-        replies: [],
-    },
-    {
-        id: 8103434,
-        subject: "Forest Vibes",
-        content: "Deep forest photography thread. Post your most atmospheric forest pics.",
-        createdAt: new Date("2025-05-16T14:39:57"),
-        image: {
-            filename: "17275138403119.jpg",
-            url: "/placeholder.svg?height=250&width=350",
-            size: 652000,
-            dimensions: "1920x1080",
-        },
-        replies: [],
-    },
-    {
-        id: 8103440,
-        subject: "Mountain Peaks",
-        content: "High altitude photography. The view from the top is always worth it.",
-        createdAt: new Date("2025-05-16T17:35:16"),
-        image: {
-            filename: "16354654654.jpg",
-            url: "/placeholder.svg?height=250&width=350",
-            size: 664000,
-            dimensions: "4096x1743",
-        },
-        replies: [],
-    },
-    {
-        id: 8104549,
-        subject: "Cozy Places",
-        content: `Cozy places you would snuggle with someone you love
->cool/darker colors
->comfy/peaceful setting
->sense of privacy
->nothing else besides you matters in the world`,
-        createdAt: new Date("2025-05-25T18:51:56"),
-        image: {
-            filename: "heidi_-_girl_of_the_alps_(...).png",
-            url: "/placeholder.svg?height=250&width=350",
-            size: 4090000,
-            dimensions: "2880x2160",
-        },
-        replies: [
-            {
-                id: 8104550,
-                content: ">>8101327\nlmaooo",
-                createdAt: new Date("2025-05-25T21:18:00"),
-            },
-        ],
-    },
-    {
-        id: 8092299,
-        subject: "Cyberpunk Aesthetics",
-        content: `Cozy places you would snuggle with someone you love
->cool/darker colors
->comfy/peaceful setting  
->sense of privacy
->nothing else besides you matters in the world`,
-        createdAt: new Date("2025-01-01T02:56:17"),
-        image: {
-            filename: "cozy.png",
-            url: "/placeholder.svg?height=250&width=350",
-            size: 3000000,
-            dimensions: "2194x1226",
-        },
-        replies: [
-            {
-                id: 8092301,
-                content: "This is exactly what I needed today. Thanks OP.",
-                createdAt: new Date("2025-01-01T03:15:22"),
-            },
-            {
-                id: 8092305,
-                content: "More like this please! The lighting is perfect.",
-                createdAt: new Date("2025-01-01T03:45:11"),
-            },
-        ],
-    },
-]
+export async function getThreads(page: number = 1, perPage: number = 10): Promise<PaginatedThreads> {
+    const offset = (page - 1) * perPage;
 
-export function getThreads(page = 1, perPage = 10) {
-    const startIndex = (page - 1) * perPage
-    const endIndex = startIndex + perPage
-    const threads = mockThreads.slice(startIndex, endIndex)
-    const totalPages = Math.ceil(mockThreads.length / perPage)
+    // First get the total count of threads for pagination
+    const totalCountResult = await db('threads').count('* as count').first();
+    const totalCount = totalCountResult?.count as number || 0;
+    const totalPages = Math.ceil(totalCount / perPage);
 
-    return { threads, totalPages }
+    // Get threads with their replies using LEFT JOIN
+    const results = await db('threads as t')
+        .leftJoin('replies as r', 't.id', 'r.thread_id')
+        .select(
+            't.id as thread_id',
+            't.subject',
+            't.content as thread_content',
+            't.created_at as thread_created_at',
+            't.user_hash',
+            't.image_url as thread_image_url',
+            't.image_name as thread_image_name',
+            't.image_size as thread_image_size',
+            't.image_dimensions as thread_image_dimensions',
+            'r.id as reply_id',
+            'r.content as reply_content',
+            'r.created_at as reply_created_at',
+            'r.image_url as reply_image_url',
+            'r.image_name as reply_image_name',
+            'r.image_size as reply_image_size',
+            'r.image_dimensions as reply_image_dimensions'
+        )
+        .orderBy('t.created_at', 'desc')
+        .orderBy('r.created_at', 'asc')
+        .limit(perPage * 50) // Generous limit to account for replies
+        .offset(offset);
+
+    // Group results by thread
+    const threadsMap = new Map<number, Thread>();
+
+    results.forEach(row => {
+        // Create or get thread
+        if (!threadsMap.has(row.thread_id)) {
+            const threadImage = row.thread_image_url ? {
+                filename: row.thread_image_name,
+                url: row.thread_image_url,
+                size: row.thread_image_size,
+                dimensions: row.thread_image_dimensions,
+            } : undefined;
+
+            threadsMap.set(row.thread_id, {
+                id: row.thread_id,
+                subject: row.subject,
+                content: row.thread_content,
+                createdAt: new Date(row.thread_created_at),
+                user_hash: row.user_hash,
+                image: threadImage,
+                replies: [],
+            });
+        }
+
+        // Add reply if it exists
+        if (row.reply_id) {
+            const thread = threadsMap.get(row.thread_id)!;
+            const replyImage = row.reply_image_url ? {
+                filename: row.reply_image_name,
+                url: row.reply_image_url,
+                size: row.reply_image_size,
+                dimensions: row.reply_image_dimensions,
+            } : undefined;
+
+            thread.replies.push({
+                id: row.reply_id,
+                content: row.reply_content,
+                createdAt: new Date(row.reply_created_at),
+                image: replyImage,
+            });
+        }
+    });
+
+    // Convert map to array and ensure we only return the requested number of threads
+    const threads = Array.from(threadsMap.values()).slice(0, perPage);
+
+    return {
+        threads,
+        currentPage: page,
+        totalPages,
+        totalCount
+    };
 }
 
-export function getThread(id: number): Thread | undefined {
-    return mockThreads.find((thread) => thread.id === id)
+export function getThread(id: number): Promise<Thread | undefined> {
+    return db('threads').where('id', id).first()
+}
+
+export async function getThreadWithReplies(id: number): Promise<Thread | null> {
+    // Get thread with its replies using LEFT JOIN
+    const results = await db('threads as t')
+        .leftJoin('replies as r', 't.id', 'r.thread_id')
+        .select(
+            't.id as thread_id',
+            't.subject',
+            't.content as thread_content',
+            't.created_at as thread_created_at',
+            't.user_hash',
+            't.image_url as thread_image_url',
+            't.image_name as thread_image_name',
+            't.image_size as thread_image_size',
+            't.image_dimensions as thread_image_dimensions',
+            'r.id as reply_id',
+            'r.content as reply_content',
+            'r.created_at as reply_created_at',
+            'r.image_url as reply_image_url',
+            'r.image_name as reply_image_name',
+            'r.image_size as reply_image_size',
+            'r.image_dimensions as reply_image_dimensions'
+        )
+        .where('t.id', id)
+        .orderBy('r.created_at', 'asc');
+
+    if (results.length === 0) {
+        return null;
+    }
+
+    // Build the thread with replies
+    const firstRow = results[0];
+    const threadImage = firstRow.thread_image_url ? {
+        filename: firstRow.thread_image_name,
+        url: firstRow.thread_image_url,
+        size: firstRow.thread_image_size,
+        dimensions: firstRow.thread_image_dimensions,
+    } : undefined;
+
+    const thread: Thread = {
+        id: firstRow.thread_id,
+        subject: firstRow.subject,
+        content: firstRow.thread_content,
+        createdAt: new Date(firstRow.thread_created_at),
+        user_hash: firstRow.user_hash,
+        image: threadImage,
+        replies: [],
+    };
+
+    // Add all replies
+    results.forEach(row => {
+        if (row.reply_id) {
+            const replyImage = row.reply_image_url ? {
+                filename: row.reply_image_name,
+                url: row.reply_image_url,
+                size: row.reply_image_size,
+                dimensions: row.reply_image_dimensions,
+            } : undefined;
+
+            thread.replies.push({
+                id: row.reply_id,
+                content: row.reply_content,
+                createdAt: new Date(row.reply_created_at),
+                image: replyImage,
+            });
+        }
+    });
+
+    return thread;
 }
 
 export function createThread(thread: Thread) {
-    return db.thread.create({
-        data: thread,
+    return db('threads').insert({
+        subject: thread.subject,
+        content: thread.content,
+        image_url: thread.image?.url,
+        image_name: thread.image?.filename,
+        image_size: thread.image?.size,
+        image_dimensions: thread.image?.dimensions,
+        user_hash: thread.user_hash,
     })
 }
