@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { createReplyAction } from "@/actions/replies/createReply"
 import { uploadImageAction } from "@/actions/upload/uploadImage"
+import { useReCaptcha } from "next-recaptcha-v3"
 
 interface ReplyFormProps {
     threadId: number
@@ -28,6 +29,7 @@ export function ReplyForm({ threadId, revalidatePath = "/", onSuccess, isModal =
         size: number;
         dimensions: string;
     } | null>(null)
+    const { executeRecaptcha } = useReCaptcha()
 
     // Form state
     const [formData, setFormData] = useState({
@@ -74,8 +76,16 @@ export function ReplyForm({ threadId, revalidatePath = "/", onSuccess, isModal =
         setError(null)
 
         try {
+            // Generate reCAPTCHA token for image upload
+            const recaptchaToken = await executeRecaptcha('upload_image')
+
             const formDataUpload = new FormData()
             formDataUpload.append("file", file)
+
+            // Add reCAPTCHA token to upload request
+            if (recaptchaToken) {
+                formDataUpload.append("recaptcha_token", recaptchaToken)
+            }
 
             const result = await uploadImageAction(formDataUpload)
 
@@ -116,11 +126,19 @@ export function ReplyForm({ threadId, revalidatePath = "/", onSuccess, isModal =
         setError(null)
 
         try {
+            // Execute reCAPTCHA
+            const recaptchaToken = await executeRecaptcha('create_reply')
+
             const submitFormData = new FormData()
             submitFormData.append("content", formData.content)
             submitFormData.append("thread_id", threadId.toString())
             submitFormData.append("device_id", deviceId)
             submitFormData.append("revalidate_path", revalidatePath)
+
+            // Add reCAPTCHA token if available
+            if (recaptchaToken) {
+                submitFormData.append("recaptcha_token", recaptchaToken)
+            }
 
             // Add uploaded image data if available
             if (uploadedImage) {

@@ -2,6 +2,7 @@
 
 import { uploadToS3 } from "@/services/s3";
 import sharp from "sharp";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 interface UploadImageResult {
     success: boolean;
@@ -14,6 +15,31 @@ interface UploadImageResult {
 
 export async function uploadImageAction(formData: FormData): Promise<UploadImageResult> {
     try {
+        // Verify reCAPTCHA token first to prevent spam uploads
+        const recaptchaToken = formData.get("recaptcha_token") as string;
+
+        if (recaptchaToken) {
+            const recaptchaResult = await verifyRecaptcha(recaptchaToken, 'upload_image');
+
+            if (!recaptchaResult.success) {
+                console.log("reCAPTCHA verification failed for image upload:", recaptchaResult.error);
+                return {
+                    success: false,
+                    error: "Security verification failed. Please try again.",
+                };
+            }
+
+            console.log(`reCAPTCHA verification successful for image upload. Score: ${recaptchaResult.score}`);
+        } else {
+            console.warn("No reCAPTCHA token provided for image upload");
+            // In production, you might want to require reCAPTCHA for uploads
+            // Uncomment the next lines to require reCAPTCHA:
+            // return {
+            //     success: false,
+            //     error: "Security verification required for image uploads.",
+            // };
+        }
+
         const file = formData.get("file") as File;
 
         if (!file || file.size === 0) {

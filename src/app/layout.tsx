@@ -6,6 +6,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { ReCaptchaProvider } from "next-recaptcha-v3";
 
 export const metadata: Metadata = {
   title: "Mateboard - Modern Anonymous Textboard",
@@ -64,11 +65,13 @@ export default function RootLayout({
         style={{ minHeight: "100vh" }}
         className="bg-[#f0f8f0] font-mono min-h-screen"
       >
-        <Header />
-        <div className="max-w-6xl my-4 md:my-8 mx-auto min-h-[calc(100vh-212px)] md:px-0 px-4">
-          {children}
-        </div>
-        <Footer />
+        <ReCaptchaProvider>
+          <Header />
+          <div className="max-w-6xl my-4 md:my-8 mx-auto min-h-[calc(100vh-212px)] md:px-0 px-4">
+            {children}
+          </div>
+          <Footer />
+        </ReCaptchaProvider>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ImageAttachment } from "@/types/thread";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 // Schema for validating the reply form data
 const CreateReplySchema = z.object({
@@ -17,6 +18,7 @@ const CreateReplySchema = z.object({
     image_dimensions: z.union([z.string(), z.null()]).optional().transform((val) => (val === "" || val === null) ? undefined : val),
     device_id: z.union([z.string(), z.null()]).optional().transform((val) => (val === "" || val === null) ? undefined : val),
     revalidate_path: z.union([z.string(), z.null()]).optional().transform((val) => (val === "" || val === null) ? undefined : val),
+    recaptcha_token: z.union([z.string(), z.null()]).optional().transform((val) => (val === "" || val === null) ? undefined : val),
 }).refine((data) => {
     // Require either content or image
     const hasContent = data.content && data.content.trim().length > 0;
@@ -39,6 +41,7 @@ export async function createReplyAction(formData: FormData) {
             image_dimensions: formData.get("image_dimensions"),
             device_id: formData.get("device_id"),
             revalidate_path: formData.get("revalidate_path"),
+            recaptcha_token: formData.get("recaptcha_token"),
         });
 
         // Parse and validate form data
@@ -51,6 +54,7 @@ export async function createReplyAction(formData: FormData) {
             image_dimensions: formData.get("image_dimensions"),
             device_id: formData.get("device_id"),
             revalidate_path: formData.get("revalidate_path"),
+            recaptcha_token: formData.get("recaptcha_token"),
         });
 
         if (!validatedFields.success) {
@@ -68,7 +72,28 @@ export async function createReplyAction(formData: FormData) {
             };
         }
 
-        const { thread_id, content, image_url, image_name, image_size, image_dimensions, device_id, revalidate_path } = validatedFields.data;
+        const { thread_id, content, image_url, image_name, image_size, image_dimensions, device_id, revalidate_path, recaptcha_token } = validatedFields.data;
+
+        // Verify reCAPTCHA token
+        if (recaptcha_token) {
+            const recaptchaResult = await verifyRecaptcha(recaptcha_token, 'create_reply');
+
+            if (!recaptchaResult.success) {
+                console.log("reCAPTCHA verification failed for reply creation:", recaptchaResult.error);
+                return {
+                    error: "Security verification failed. Please try again.",
+                };
+            }
+
+            console.log(`reCAPTCHA verification successful for reply creation. Score: ${recaptchaResult.score}`);
+        } else {
+            console.warn("No reCAPTCHA token provided for reply creation");
+            // You can decide whether to require reCAPTCHA or just log a warning
+            // Uncomment the next lines to require reCAPTCHA:
+            // return {
+            //     error: "Security verification required. Please try again.",
+            // };
+        }
 
         try {
             // Get request headers for user identification

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { createThreadAction } from "@/actions/threads/createThread"
 import { uploadImageAction } from "@/actions/upload/uploadImage"
+import { useReCaptcha } from "next-recaptcha-v3"
 
 export function NewThreadForm() {
     const [isOpen, setIsOpen] = useState(false)
@@ -21,6 +22,7 @@ export function NewThreadForm() {
         size: number;
         dimensions: string;
     } | null>(null)
+    const { executeRecaptcha } = useReCaptcha()
 
     // Form state
     const [formData, setFormData] = useState({
@@ -68,8 +70,16 @@ export function NewThreadForm() {
         setError(null)
 
         try {
+            // Generate reCAPTCHA token for image upload
+            const recaptchaToken = await executeRecaptcha('upload_image')
+
             const formDataUpload = new FormData()
             formDataUpload.append("file", file)
+
+            // Add reCAPTCHA token to upload request
+            if (recaptchaToken) {
+                formDataUpload.append("recaptcha_token", recaptchaToken)
+            }
 
             const result = await uploadImageAction(formDataUpload)
 
@@ -117,10 +127,18 @@ export function NewThreadForm() {
         setError(null)
 
         try {
+            // Execute reCAPTCHA
+            const recaptchaToken = await executeRecaptcha('create_thread')
+
             const submitFormData = new FormData()
             submitFormData.append("subject", formData.subject)
             submitFormData.append("content", formData.content)
             submitFormData.append("device_id", deviceId)
+
+            // Add reCAPTCHA token if available
+            if (recaptchaToken) {
+                submitFormData.append("recaptcha_token", recaptchaToken)
+            }
 
             // Add uploaded image data if available
             if (uploadedImage) {
