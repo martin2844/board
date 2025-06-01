@@ -7,6 +7,7 @@ import "@fontsource/roboto/700.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ReCaptchaProvider } from "next-recaptcha-v3";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Mateboard - Modern Anonymous Textboard",
@@ -65,6 +66,17 @@ export default function RootLayout({
         style={{ minHeight: "100vh" }}
         className="bg-[#f0f8f0] font-mono min-h-screen"
       >
+        <Script id="ms-clarity">
+          {
+            `
+             (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "rsv1remm0s");
+          `
+          }
+        </Script>
         <ReCaptchaProvider>
           <Header />
           <div className="max-w-6xl my-4 md:my-8 mx-auto min-h-[calc(100vh-212px)] md:px-0 px-4">
