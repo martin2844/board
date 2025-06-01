@@ -8,11 +8,49 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: {
-    template: "%s | Mateboard",
-    default: "Mateboard - Modern Imageboard"
+  title: "Mateboard - Modern Anonymous Textboard",
+  description: "A modern, anonymous textboard platform where you can create threads, reply anonymously, and engage in discussions. Built with Next.js featuring real-time search and clean interface.",
+  keywords: ["textboard", "imageboard", "anonymous", "forum", "discussion", "threads", "replies", "modern board", "anonymous posting"],
+  authors: [{ name: "CodigoMate team" }],
+  creator: "CodigoMate",
+  publisher: "CodigoMate",
+  metadataBase: new URL("https://board.codigomate.com"),
+  alternates: {
+    canonical: "/",
   },
-  description: "A modern, fast imageboard application built with Next.js, featuring real-time search, image uploads, and a clean, responsive interface.",
+  openGraph: {
+    type: "website",
+    url: "https://board.codigomate.com",
+    title: "Mateboard - Modern Anonymous Textboard",
+    description: "A modern, anonymous textboard platform where you can create threads, reply anonymously, and engage in discussions. Built with Next.js featuring real-time search and clean interface.",
+    siteName: "Mateboard",
+    images: [
+      {
+        url: "/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Mateboard - Modern Anonymous Textboard",
+      },
+    ],
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mateboard - Modern Anonymous Textboard",
+    description: "A modern, anonymous textboard platform where you can create threads, reply anonymously, and engage in discussions. Built with Next.js featuring real-time search and clean interface.",
+    images: ["/og.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  category: "technology",
 };
 
 export default function RootLayout({
