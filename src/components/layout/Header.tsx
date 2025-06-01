@@ -11,7 +11,7 @@ export default function Header() {
                 <Link href="/">
                     <div className="flex items-center gap-2 mb-2 md:mb-4">
                         <Image
-                            src="/icon.png"
+                            src="/logo.png"
                             alt="Mate Board Icon"
                             width={32}
                             height={32}
