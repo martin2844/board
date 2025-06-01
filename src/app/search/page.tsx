@@ -2,12 +2,30 @@ import { searchContent } from "@/services/search"
 import { SearchResults } from "@/components/Search/SearchResults"
 import { Pagination } from "@/components/Pagination/Pagination"
 import Link from "next/link"
+import type { Metadata } from "next"
 
 interface SearchPageProps {
     searchParams: Promise<{
         q?: string
         page?: string
     }>
+}
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+    const resolvedSearchParams = await searchParams
+    const query = resolvedSearchParams.q || ""
+
+    if (!query) {
+        return {
+            title: "Search",
+            description: "Search through threads and replies on Mateboard.",
+        }
+    }
+
+    return {
+        title: `Search: "${query}"`,
+        description: `Search results for "${query}" on Mateboard.`,
+    }
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {

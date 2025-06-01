@@ -1,1 +1,4 @@
 .git
+db.sqlite
+node_modules
+.next

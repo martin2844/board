@@ -1,5 +1,11 @@
 import { getThreads } from "@/services/thread";
 import ThreadPage from "@/components/pagesContent/Thread";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Mateboard",
+  description: "Browse the latest threads and discussions on Mateboard.",
+};
 
 interface HomePageProps {
   searchParams: Promise<{ page?: string }>;

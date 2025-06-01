@@ -8,5 +8,9 @@ services:
     environment:
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
+      - DATABASE_PATH=./data/db.sqlite
     volumes:
-      - ./db.sqlite:/app/db.sqlite
+      - mateboard_data:/app/data
+
+volumes:
+  mateboard_data:
