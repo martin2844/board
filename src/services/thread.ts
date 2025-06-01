@@ -1,4 +1,4 @@
-import type { Thread, PaginatedThreads } from "@/types/thread"
+import type { Thread, PaginatedThreads, ImageAttachment, Reply } from "@/types/thread"
 import db from "@/lib/db"
 
 export async function getThreads(page: number = 1, perPage: number = 10): Promise<PaginatedThreads> {
@@ -41,7 +41,7 @@ export async function getThreads(page: number = 1, perPage: number = 10): Promis
     results.forEach(row => {
         // Create or get thread
         if (!threadsMap.has(row.thread_id)) {
-            const threadImage = row.thread_image_url ? {
+            const threadImage = (row.thread_image_url && row.thread_image_url.trim() !== '') ? {
                 filename: row.thread_image_name,
                 url: row.thread_image_url,
                 size: row.thread_image_size,
@@ -62,7 +62,7 @@ export async function getThreads(page: number = 1, perPage: number = 10): Promis
         // Add reply if it exists
         if (row.reply_id) {
             const thread = threadsMap.get(row.thread_id)!;
-            const replyImage = row.reply_image_url ? {
+            const replyImage = (row.reply_image_url && row.reply_image_url.trim() !== '') ? {
                 filename: row.reply_image_name,
                 url: row.reply_image_url,
                 size: row.reply_image_size,
@@ -124,7 +124,7 @@ export async function getThreadWithReplies(id: number): Promise<Thread | null> {
 
     // Build the thread with replies
     const firstRow = results[0];
-    const threadImage = firstRow.thread_image_url ? {
+    const threadImage = (firstRow.thread_image_url && firstRow.thread_image_url.trim() !== '') ? {
         filename: firstRow.thread_image_name,
         url: firstRow.thread_image_url,
         size: firstRow.thread_image_size,
@@ -144,7 +144,7 @@ export async function getThreadWithReplies(id: number): Promise<Thread | null> {
     // Add all replies
     results.forEach(row => {
         if (row.reply_id) {
-            const replyImage = row.reply_image_url ? {
+            const replyImage = (row.reply_image_url && row.reply_image_url.trim() !== '') ? {
                 filename: row.reply_image_name,
                 url: row.reply_image_url,
                 size: row.reply_image_size,
@@ -163,14 +163,59 @@ export async function getThreadWithReplies(id: number): Promise<Thread | null> {
     return thread;
 }
 
-export function createThread(thread: Thread) {
-    return db('threads').insert({
-        subject: thread.subject,
-        content: thread.content,
-        image_url: thread.image?.url,
-        image_name: thread.image?.filename,
-        image_size: thread.image?.size,
-        image_dimensions: thread.image?.dimensions,
-        user_hash: thread.user_hash,
-    })
+export async function createThread(threadData: {
+    subject: string;
+    content: string;
+    image?: ImageAttachment;
+    user_hash: string;
+}): Promise<Thread> {
+    const [threadId] = await db('threads').insert({
+        subject: threadData.subject,
+        content: threadData.content,
+        image_url: threadData.image?.url,
+        image_name: threadData.image?.filename,
+        image_size: threadData.image?.size?.toString(),
+        image_dimensions: threadData.image?.dimensions,
+        user_hash: threadData.user_hash,
+    }).returning('id');
+
+    // Return the created thread
+    const createdThread: Thread = {
+        id: typeof threadId === 'object' ? threadId.id : threadId,
+        subject: threadData.subject,
+        content: threadData.content,
+        createdAt: new Date(),
+        user_hash: threadData.user_hash,
+        image: threadData.image,
+        replies: [],
+    };
+
+    return createdThread;
+}
+
+export async function createReply(replyData: {
+    thread_id: number;
+    content: string;
+    image?: ImageAttachment;
+    user_hash: string;
+}): Promise<Reply> {
+    const [replyId] = await db('replies').insert({
+        thread_id: replyData.thread_id,
+        content: replyData.content,
+        image_url: replyData.image?.url,
+        image_name: replyData.image?.filename,
+        image_size: replyData.image?.size?.toString(),
+        image_dimensions: replyData.image?.dimensions,
+        user_hash: replyData.user_hash,
+    }).returning('id');
+
+    // Return the created reply
+    const createdReply: Reply = {
+        id: typeof replyId === 'object' ? replyId.id : replyId,
+        content: replyData.content,
+        createdAt: new Date(),
+        image: replyData.image,
+    };
+
+    return createdReply;
 }

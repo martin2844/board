@@ -6,10 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { createThreadAction } from "@/actions/threads/createThread"
+import { createReplyAction } from "@/actions/replies/createReply"
 import { uploadImageAction } from "@/actions/upload/uploadImage"
 
-export function NewThreadForm() {
+interface ReplyFormProps {
+    threadId: number
+    revalidatePath?: string
+    onSuccess?: () => void
+    isModal?: boolean
+}
+
+export function ReplyForm({ threadId, revalidatePath = "/", onSuccess, isModal = false }: ReplyFormProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [deviceId, setDeviceId] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,7 +31,6 @@ export function NewThreadForm() {
 
     // Form state
     const [formData, setFormData] = useState({
-        subject: "",
         content: ""
     })
 
@@ -73,7 +79,7 @@ export function NewThreadForm() {
 
             const result = await uploadImageAction(formDataUpload)
 
-            if (result && result.success && result.url) {
+            if (result.success && result.url) {
                 setUploadedImage({
                     url: result.url,
                     filename: result.filename || file.name,
@@ -81,14 +87,7 @@ export function NewThreadForm() {
                     dimensions: result.dimensions || "unknown",
                 })
             } else {
-                // Check if result is null/undefined (server crash) and file is large
-                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
-
-                if (!result && file.size > 1024 * 1024) {
-                    setError(`File is too large (${fileSizeMB}MB). Please choose an image under 1MB.`)
-                } else {
-                    setError(result?.error || "Failed to upload image")
-                }
+                setError(result.error || "Failed to upload image")
                 // Clear the file input
                 event.target.value = ""
             }
@@ -118,9 +117,10 @@ export function NewThreadForm() {
 
         try {
             const submitFormData = new FormData()
-            submitFormData.append("subject", formData.subject)
             submitFormData.append("content", formData.content)
+            submitFormData.append("thread_id", threadId.toString())
             submitFormData.append("device_id", deviceId)
+            submitFormData.append("revalidate_path", revalidatePath)
 
             // Add uploaded image data if available
             if (uploadedImage) {
@@ -130,22 +130,23 @@ export function NewThreadForm() {
                 submitFormData.append("image_dimensions", uploadedImage.dimensions)
             }
 
-            const result = await createThreadAction(submitFormData)
+            const result = await createReplyAction(submitFormData)
 
             if (result?.error) {
                 setError(result.error)
                 setIsSubmitting(false)
-            } else if (result?.threadId) {
-                // Success - close form and reset state
+            } else if (result?.success) {
+                // Success - close form, clear error and reset state
                 setIsOpen(false)
-                setIsSubmitting(false)
                 setError(null)
+                setIsSubmitting(false)
                 setUploadedImage(null)
-                setFormData({ subject: "", content: "" }) // Reset form data
+                setFormData({ content: "" }) // Reset form data
+                onSuccess?.()
             }
 
         } catch (err) {
-            console.error("Thread creation error:", err)
+            console.error("Reply creation error:", err)
 
             // Check if this is a body size limit error
             if (err instanceof Error) {
@@ -165,81 +166,65 @@ export function NewThreadForm() {
         setIsOpen(false)
         setError(null)
         setUploadedImage(null)
-        setFormData({ subject: "", content: "" }) // Reset form data on cancel
+        setFormData({ content: "" }) // Reset form data on cancel
     }
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }))
+    const handleInputChange = (value: string) => {
+        setFormData({ content: value })
     }
 
-    if (!isOpen) {
+    if (!isModal && !isOpen) {
         return (
             <Button
                 onClick={() => setIsOpen(true)}
-                className="bg-[#90c090] mb-4 hover:bg-[#7ab07a] text-black border border-gray-400 font-mono"
+                variant="ghost"
+                className="text-blue-600 hover:underline text-sm p-0 h-auto font-normal"
             >
-                [Start a New Thread]
+                [Reply]
             </Button>
         )
     }
 
     return (
-        <div className="bg-[#e8f4e8] border-2 border-[#90c090] p-2 md:p-4 mb-2 md:mb-4">
-            <h3 className="font-bold mb-2 md:mb-4 text-[#2d5a2d] text-sm md:text-base">Start a New Thread</h3>
+        <div className={isModal ? "" : "bg-[#e8f4e8] border border-[#90c090] p-2 md:p-3 mt-2 rounded"}>
+            {!isModal && (
+                <h4 className="font-bold mb-2 md:mb-3 text-[#2d5a2d] text-xs md:text-sm">Reply to Thread</h4>
+            )}
 
             {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-2 md:mb-4 text-xs md:text-sm">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-2 md:mb-3 text-xs">
                     {error}
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-2 md:space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-2 md:space-y-3">
                 <div>
-                    <Label htmlFor="subject" className="text-xs md:text-sm font-bold">
-                        Subject:
-                    </Label>
-                    <Input
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={(e) => handleInputChange("subject", e.target.value)}
-                        className="bg-white border-gray-400 font-mono text-xs md:text-sm w-full"
-                        placeholder="Thread subject..."
-                        required
-                        disabled={isSubmitting || isUploading}
-                    />
-                </div>
-
-                <div>
-                    <Label htmlFor="file" className="text-xs md:text-sm font-bold">
+                    <Label htmlFor={`file-${threadId}`} className="text-xs font-bold">
                         File (max 1MB): {isUploading && <span className="text-blue-600">(uploading...)</span>}
                         {uploadedImage && <span className="text-green-600">(uploaded: {uploadedImage.filename})</span>}
                     </Label>
                     <Input
-                        id="file"
+                        id={`file-${threadId}`}
                         name="file"
                         type="file"
                         accept="image/*"
-                        className="bg-white border-gray-400 font-mono text-xs md:text-sm w-full"
+                        className="bg-white border-gray-400 font-mono text-xs w-full"
                         disabled={isSubmitting || isUploading}
                         onChange={handleFileChange}
                     />
                 </div>
 
                 <div>
-                    <Label htmlFor="content" className="text-xs md:text-sm font-bold">
+                    <Label htmlFor={`content-${threadId}`} className="text-xs font-bold">
                         Comment:
                     </Label>
                     <Textarea
-                        id="content"
+                        id={`content-${threadId}`}
                         name="content"
                         value={formData.content}
-                        onChange={(e) => handleInputChange("content", e.target.value)}
-                        className="bg-white border-gray-400 font-mono text-xs md:text-sm min-h-[80px] md:min-h-[100px] w-full"
-                        placeholder="Enter your message here... (optional if image attached)"
+                        onChange={(e) => handleInputChange(e.target.value)}
+                        className="bg-white border-gray-400 font-mono text-xs min-h-[60px] md:min-h-[80px] w-full"
+                        placeholder="Enter your reply... (optional if image attached)"
                         disabled={isSubmitting || isUploading}
                     />
                 </div>
@@ -247,22 +232,26 @@ export function NewThreadForm() {
                 <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                         type="submit"
-                        className="bg-[#90c090] hover:bg-[#7ab07a] text-black border border-gray-400 font-mono text-xs md:text-sm"
+                        className="bg-[#90c090] hover:bg-[#7ab07a] text-black border border-gray-400 font-mono text-xs"
                         disabled={isSubmitting || isUploading}
+                        size="sm"
                     >
-                        {isSubmitting ? "Posting..." : isUploading ? "Uploading..." : "Post Thread"}
+                        {isSubmitting ? "Posting..." : isUploading ? "Uploading..." : "Post Reply"}
                     </Button>
-                    <Button
-                        type="button"
-                        onClick={handleCancel}
-                        variant="outline"
-                        className="border-gray-400 font-mono text-xs md:text-sm"
-                        disabled={isSubmitting || isUploading}
-                    >
-                        Cancel
-                    </Button>
+                    {!isModal && (
+                        <Button
+                            type="button"
+                            onClick={handleCancel}
+                            variant="outline"
+                            className="border-gray-400 font-mono text-xs"
+                            disabled={isSubmitting || isUploading}
+                            size="sm"
+                        >
+                            Cancel
+                        </Button>
+                    )}
                 </div>
             </form>
         </div>
     )
-}
+} 

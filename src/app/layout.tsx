@@ -24,7 +24,7 @@ export default function RootLayout({
         className="bg-[#f0f8f0] font-mono min-h-screen"
       >
         <Header />
-        <div className="max-w-6xl my-8 mx-auto min-h-[calc(100vh-212px)]">
+        <div className="max-w-6xl my-4 md:my-8 mx-auto min-h-[calc(100vh-212px)] md:px-0 px-4">
           {children}
         </div>
         <Footer />

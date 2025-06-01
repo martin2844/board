@@ -8,155 +8,167 @@ exports.seed = async function(knex) {
   await knex('threads').del();
   await knex('users').del();
 
-  // Insert users first
-  const users = [
-    {
-      hash: 'user_001',
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      device_id: 'device_001'
-    },
-    {
-      hash: 'user_002', 
-      ip_address: '192.168.1.101',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      device_id: 'device_002'
-    },
-    {
-      hash: 'user_003',
-      ip_address: '192.168.1.102', 
-      user_agent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
-      device_id: 'device_003'
-    }
+  // Image URLs provided by user
+  const imageUrls = [
+    'https://s3.c5h.dev/threads/images/1748776470314_4gug1hr7v8c.webp',
+    'https://s3.c5h.dev/threads/images/1748778215815_201yx7i6tfx.webp',
+    'https://s3.c5h.dev/threads/images/1748778230152_dtjox9y7tg.webp',
+    'https://s3.c5h.dev/threads/images/1748778343190_o6sej3e4yph.gif',
+    'https://s3.c5h.dev/threads/images/1748779171619_x7uk8tkihj.gif',
+    'https://s3.c5h.dev/threads/images/1748778692110_95sj23hawh8.webp',
+    'https://s3.c5h.dev/threads/images/1748779194650_6iv6fg1npqr.webp',
+    'https://s3.c5h.dev/threads/images/1748779318053_nven3mj8un.gif',
+    'https://s3.c5h.dev/threads/images/1748779374590_h8rxtwazrd5.webp',
+    'https://s3.c5h.dev/threads/images/1748779853886_3rtrz5ksxw4.webp',
+    'https://s3.c5h.dev/threads/images/1748779860429_871dhww4jb7.webp',
+    'https://s3.c5h.dev/threads/images/1748779866298_6azmgrq8v9i.gif'
   ];
 
+  // Sample subjects for variety
+  const subjects = [
+    'Animation scenery wallpaper', 'Landscape Photography', 'Forest Vibes', 'Mountain Peaks', 
+    'Cozy Places', 'Cyberpunk Aesthetics', 'Ocean Views', 'Desert Landscapes', 'City Lights',
+    'Vintage Photography', 'Abstract Art', 'Nature Macros', 'Street Photography', 'Architecture',
+    'Wildlife Photos', 'Food Photography', 'Travel Memories', 'Space Imagery', 'Minimalist Design',
+    'Gaming Screenshots', 'Anime Backgrounds', 'Film Photography', 'Digital Art', 'Sunset Views',
+    'Winter Scenes', 'Spring Flowers', 'Summer Vibes', 'Autumn Colors', 'Night Photography',
+    'Urban Exploration', 'Historical Sites', 'Modern Art', 'Classic Cars', 'Technology',
+    'Science Fiction', 'Fantasy Art', 'Horror Atmosphere', 'Romance Scenes', 'Action Shots'
+  ];
+
+  // Sample content templates with searchable keywords
+  const contentTemplates = [
+    'Post your favorite animated scenery wallpapers. The graphics quality is amazing these days.',
+    'Share your best landscape shots. Nature photography never gets old.',
+    'Deep forest photography thread. Looking for atmospheric pics with tortilla recipes.',
+    'High altitude mountain photography. The view from 50 chars is always worth it.',
+    'Cozy places you would snuggle with someone. Perfect for winter nights.',
+    'Cyberpunk aesthetics and neon lights. Future city vibes are incredible.',
+    'Ocean waves and beach photography. Nothing beats the sound of water.',
+    'Desert landscapes with dramatic lighting. Sand dunes create amazing patterns.',
+    'City lights at night create beautiful bokeh effects in photography.',
+    'Vintage photography techniques using film cameras from the 1970s.',
+    'Abstract art that challenges perception and makes you think differently.',
+    'Nature macro photography revealing hidden details invisible to naked eye.',
+    'Street photography capturing authentic moments of human interaction.',
+    'Architecture photography showcasing modern and classical building designs.',
+    'Wildlife photography requires patience but rewards with stunning images.',
+    'Food photography making simple ingredients look absolutely delicious.',
+    'Travel memories from around the world captured in single frames.',
+    'Space imagery from telescopes showing galaxies millions of years away.',
+    'Minimalist design principles applied to photography and visual arts.',
+    'Gaming screenshots from latest releases with incredible graphics engines.'
+  ];
+
+  // Generate users (100 users for variety)
+  const users = [];
+  for (let i = 1; i <= 100; i++) {
+    users.push({
+      hash: `user_${i.toString().padStart(3, '0')}`,
+      ip_address: `192.168.${Math.floor(i/256)}.${i%256}`,
+      user_agent: `Mozilla/5.0 (Device ${i}) AppleWebKit/537.36`,
+      device_id: `device_${i.toString().padStart(3, '0')}`
+    });
+  }
   await knex('users').insert(users);
 
-  // Insert threads
-  const threads = [
-    {
-      id: 1,
-      subject: "Animation scenery wallpaper",
-      content: "Post your favorite animated scenery wallpapers. I'll start with this beautiful castle scene.",
-      image_url: "/placeholder.svg?height=300&width=400",
-      image_name: "Cliffside-Tower.png",
-      image_size: "2190000",
-      image_dimensions: "1920x1080",
-      user_hash: "user_001",
-      created_at: new Date("2025-05-15T18:10:22"),
-      updated_at: new Date("2025-05-15T18:10:22")
-    },
-    {
-      id: 2,
-      subject: "Landscape Photography",
-      content: "Share your best landscape shots. Nature is beautiful.",
-      image_url: "/placeholder.svg?height=250&width=350",
-      image_name: "17316266990710.jpg",
-      image_size: "2060000",
-      image_dimensions: "3840x2160",
-      user_hash: "user_002",
-      created_at: new Date("2025-05-16T14:38:11"),
-      updated_at: new Date("2025-05-16T14:38:11")
-    },
-    {
-      id: 3,
-      subject: "Forest Vibes",
-      content: "Deep forest photography thread. Post your most atmospheric forest pics.",
-      image_url: "/placeholder.svg?height=250&width=350",
-      image_name: "17275138403119.jpg",
-      image_size: "652000",
-      image_dimensions: "1920x1080",
-      user_hash: "user_001",
-      created_at: new Date("2025-05-16T14:39:57"),
-      updated_at: new Date("2025-05-16T14:39:57")
-    },
-    {
-      id: 4,
-      subject: "Mountain Peaks",
-      content: "High altitude photography. The view from the top is always worth it.",
-      image_url: "/placeholder.svg?height=250&width=350",
-      image_name: "16354654654.jpg",
-      image_size: "664000",
-      image_dimensions: "4096x1743",
-      user_hash: "user_003",
-      created_at: new Date("2025-05-16T17:35:16"),
-      updated_at: new Date("2025-05-16T17:35:16")
-    },
-    {
-      id: 5,
-      subject: "Cozy Places",
-      content: `Cozy places you would snuggle with someone you love
->cool/darker colors
->comfy/peaceful setting
->sense of privacy
->nothing else besides you matters in the world`,
-      image_url: "/placeholder.svg?height=250&width=350",
-      image_name: "heidi_-_girl_of_the_alps_(...).png",
-      image_size: "4090000",
-      image_dimensions: "2880x2160",
-      user_hash: "user_002",
-      created_at: new Date("2025-05-25T18:51:56"),
-      updated_at: new Date("2025-05-25T18:51:56")
-    },
-    {
-      id: 6,
-      subject: "Cyberpunk Aesthetics",
-      content: `Cozy places you would snuggle with someone you love
->cool/darker colors
->comfy/peaceful setting  
->sense of privacy
->nothing else besides you matters in the world`,
-      image_url: "/placeholder.svg?height=250&width=350",
-      image_name: "cozy.png",
-      image_size: "3000000",
-      image_dimensions: "2194x1226",
-      user_hash: "user_003",
-      created_at: new Date("2025-01-01T02:56:17"),
-      updated_at: new Date("2025-01-01T02:56:17")
-    }
+  // Generate 1000 threads
+  const threads = [];
+  for (let i = 1; i <= 1000; i++) {
+    const imageIndex = Math.floor(Math.random() * imageUrls.length);
+    const subjectIndex = Math.floor(Math.random() * subjects.length);
+    const contentIndex = Math.floor(Math.random() * contentTemplates.length);
+    const userIndex = Math.floor(Math.random() * 100) + 1;
+    
+    // Random date within last 6 months
+    const randomDate = new Date(Date.now() - Math.random() * 6 * 30 * 24 * 60 * 60 * 1000);
+    
+    // Get image details
+    const imageUrl = imageUrls[imageIndex];
+    const fileName = imageUrl.split('/').pop();
+    const isGif = fileName.endsWith('.gif');
+    
+    threads.push({
+      id: i,
+      subject: subjects[subjectIndex] + (i > subjects.length ? ` #${Math.floor(i/subjects.length)}` : ''),
+      content: contentTemplates[contentIndex] + ` Thread ${i} with unique content for testing search functionality.`,
+      image_url: Math.random() > 0.3 ? imageUrl : null, // 70% chance of having image
+      image_name: Math.random() > 0.3 ? fileName : null,
+      image_size: Math.random() > 0.3 ? (Math.floor(Math.random() * 5000000) + 500000).toString() : null,
+      image_dimensions: Math.random() > 0.3 ? (isGif ? '800x600' : `${1920 + Math.floor(Math.random() * 1080)}x${1080 + Math.floor(Math.random() * 720)}`) : null,
+      user_hash: `user_${userIndex.toString().padStart(3, '0')}`,
+      created_at: randomDate,
+      updated_at: randomDate
+    });
+  }
+  
+  // Insert threads in batches of 100 to avoid SQLite limits
+  const threadBatchSize = 100;
+  for (let i = 0; i < threads.length; i += threadBatchSize) {
+    const batch = threads.slice(i, i + threadBatchSize);
+    await knex('threads').insert(batch);
+    console.log(`Inserted threads batch ${Math.floor(i/threadBatchSize) + 1}/${Math.ceil(threads.length/threadBatchSize)}`);
+  }
+
+  // Generate 1000 replies
+  const replies = [];
+  const replyTexts = [
+    'Very nice OP, but it would be better if these were labelled with proper tags.',
+    'lmaooo this is exactly what I was looking for today.',
+    'This is perfect! Thanks for sharing this amazing content.',
+    'More like this please! The lighting and composition are incredible.',
+    'Absolutely stunning work. How did you achieve this effect?',
+    'Not bad, but I think the tortilla recipe needs more spice.',
+    'The 50 chars limit makes it hard to express everything I want to say.',
+    'Great photography skills! What camera and lens did you use?',
+    'This reminds me of my childhood memories from summer vacations.',
+    'Beautiful colors and contrast. Very professional looking shot.',
+    'Thanks for posting this! Saved to my collection immediately.',
+    'The atmospheric perspective in this image is just phenomenal.',
+    'Incredible detail work. You can see every texture clearly.',
+    'This would make an excellent desktop wallpaper for sure.',
+    'Amazing composition following the rule of thirds perfectly.',
+    'The depth of field creates such a dreamy bokeh effect.',
+    'Natural lighting vs artificial - this is how its done right.',
+    'Post processing skills are on point. What software do you use?',
+    'This captures the mood and emotion perfectly in single frame.',
+    'Technical excellence combined with artistic vision. Respect!'
   ];
 
-  await knex('threads').insert(threads);
+  for (let i = 1; i <= 1000; i++) {
+    const threadId = Math.floor(Math.random() * 1000) + 1;
+    const replyIndex = Math.floor(Math.random() * replyTexts.length);
+    const userIndex = Math.floor(Math.random() * 100) + 1;
+    const imageIndex = Math.floor(Math.random() * imageUrls.length);
+    
+    // Random date after the thread creation
+    const randomDate = new Date(Date.now() - Math.random() * 5 * 30 * 24 * 60 * 60 * 1000);
+    
+    const imageUrl = imageUrls[imageIndex];
+    const fileName = imageUrl.split('/').pop();
+    const isGif = fileName.endsWith('.gif');
+    
+    replies.push({
+      id: i,
+      thread_id: threadId,
+      content: replyTexts[replyIndex] + ` Reply ${i} with searchable content.`,
+      image_url: Math.random() > 0.7 ? imageUrl : null, // 30% chance of having image in reply
+      image_name: Math.random() > 0.7 ? fileName : null,
+      image_size: Math.random() > 0.7 ? (Math.floor(Math.random() * 3000000) + 200000).toString() : null,
+      image_dimensions: Math.random() > 0.7 ? (isGif ? '640x480' : `${1280 + Math.floor(Math.random() * 640)}x${720 + Math.floor(Math.random() * 360)}`) : null,
+      user_hash: `user_${userIndex.toString().padStart(3, '0')}`,
+      created_at: randomDate,
+      updated_at: randomDate
+    });
+  }
+  
+  // Insert replies in batches of 100 to avoid SQLite limits
+  const replyBatchSize = 100;
+  for (let i = 0; i < replies.length; i += replyBatchSize) {
+    const batch = replies.slice(i, i + replyBatchSize);
+    await knex('replies').insert(batch);
+    console.log(`Inserted replies batch ${Math.floor(i/replyBatchSize) + 1}/${Math.ceil(replies.length/replyBatchSize)}`);
+  }
 
-  // Insert replies
-  const replies = [
-    {
-      id: 8103406,
-      thread_id: 8103257,
-      content: "Very nice OP, but it would be better if these were labelled.",
-      image_url: "/placeholder.svg?height=200&width=300",
-      image_name: "the_port_of_hort.jpg",
-      image_size: "442000",
-      image_dimensions: "1920x1038",
-      user_hash: "user_002",
-      created_at: new Date("2025-05-16T05:54:08"),
-      updated_at: new Date("2025-05-16T05:54:08")
-    },
-    {
-      id: 8104550,
-      thread_id: 8104549,
-      content: ">>8101327\nlmaooo",
-      user_hash: "user_001",
-      created_at: new Date("2025-05-25T21:18:00"),
-      updated_at: new Date("2025-05-25T21:18:00")
-    },
-    {
-      id: 8092301,
-      thread_id: 8092299,
-      content: "This is exactly what I needed today. Thanks OP.",
-      user_hash: "user_002",
-      created_at: new Date("2025-01-01T03:15:22"),
-      updated_at: new Date("2025-01-01T03:15:22")
-    },
-    {
-      id: 8092305,
-      thread_id: 8092299,
-      content: "More like this please! The lighting is perfect.",
-      user_hash: "user_003",
-      created_at: new Date("2025-01-01T03:45:11"),
-      updated_at: new Date("2025-01-01T03:45:11")
-    }
-  ];
-
-  await knex('replies').insert(replies);
+  console.log('✅ Seeded database with 1000 threads and 1000 replies for FTS testing!');
 }; 

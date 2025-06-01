@@ -5,16 +5,28 @@ interface ThreadRepliesOmittedProps {
 }
 
 export default function ThreadRepliesOmitted({ thread }: ThreadRepliesOmittedProps) {
-    if (thread.replies.length === 0) return null;
+    if (thread.replies.length <= 5) return null;
 
-    const replyCount = thread.replies.length;
-    const imageCount = thread.replies.filter(r => r.image).length + (thread.image ? 1 : 0);
+    const totalReplies = thread.replies.length;
+    const shownReplies = 5;
+    const omittedReplies = totalReplies - shownReplies;
+
+    const totalImages = thread.replies.filter(r => r.image).length;
+    const shownImages = thread.replies.slice(0, 5).filter(r => r.image).length;
+    const omittedImages = totalImages - shownImages;
+
+    // Build the omitted message
+    let omittedText = `${omittedReplies} replies`;
+    if (omittedImages > 0) {
+        omittedText += ` and ${omittedImages} images`;
+    }
+    omittedText += " omitted.";
 
     return (
         <div className="flex items-center gap-2 mt-2 mb-2">
             <span className="text-amber-600">📁</span>
             <span className="text-sm text-gray-600">
-                {replyCount} replies and {imageCount} images omitted.
+                {omittedText}
             </span>
             <a href={`/thread/${thread.id}`} className="text-sm text-blue-600 hover:underline">
                 Click here to view

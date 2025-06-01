@@ -16,5 +16,7 @@ const config = {
   },
 };
 
+const db = knex(config);
+
 // Can only be imported from SSR files
-export default knex(config);
+export default db;

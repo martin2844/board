@@ -25,9 +25,9 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
     }
 
     return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="mb-4">
-                <Link href="/" className="text-blue-600 hover:underline text-sm">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+            <div className="mb-2 md:mb-4">
+                <Link href="/" className="text-blue-600 hover:underline text-xs md:text-sm">
                     ← Back to Board
                 </Link>
             </div>

@@ -1,134 +1,242 @@
-# Knext 🚀
+# Mate Board - Next.js Imageboard 🚀
 
-Welcome to **Knext** - a Next.js starter template that incorporates NextAuth, styled using TailwindCSS, and utilizes SQLite with KNEX for efficient query building. Knext combines the powerful features of these technologies to streamline the setup of Next.js projects.
+A modern, fast imageboard application built with Next.js, featuring real-time search, image uploads, and a clean, responsive interface inspired by classic imageboards.
 
-## Technologies Used 🛠️
+## 🌟 Features
 
-- **Next.js** - The React framework for production.
-- **NextAuth.js** - Authentication for Next.js.
-- **TailwindCSS** - A utility-first CSS framework for rapid UI development.
-- **SQLite** - A C-language library that implements a small, fast, self-contained SQL database engine.
-- **KNEX** - A SQL query builder for JavaScript.
+- **Thread-based discussions** with nested replies
+- **Image uploads** with S3 storage support
+- **Advanced search** with SQLite FTS5 full-text search
+- **Live search** with real-time dropdown results and keyboard navigation
+- **Smart pagination** with ellipsis for large result sets
+- **Responsive design** with mobile-friendly interface
+- **File type support** for images (JPEG, PNG, GIF, WebP)
+- **Anonymous posting** with unique user identification
+- **Database migrations** and seeding for development
 
-## Getting Started 🏁
+## 🛠️ Technologies Used
 
-Follow these instructions to get your copy of the starter up and running on your local machine for development and testing purposes.
+- **Next.js 15** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **SQLite** with **Better-SQLite3** - Fast, embedded database
+- **Knex.js** - SQL query builder and migration tool
+- **SQLite FTS5** - Full-text search engine
+- **TailwindCSS** - Utility-first CSS framework
+- **Radix UI** - Accessible component primitives
+- **AWS S3** - Cloud storage for images
+- **dayjs** - Date manipulation library
+- **Zod** - Runtime type validation
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-Before you begin, ensure you have npm installed on your system. You can install it from [npmjs.com](https://www.npmjs.com/get-npm).
+- Node.js 18+ 
+- npm or yarn
+- AWS S3 bucket (for image uploads)
 
 ### Installation
 
-1. Clone the repository:
-
+1. **Clone the repository:**
    ```bash
-   git clone git@github.com:martin2844/knext.git
+   git clone <repository-url>
+   cd boards
    ```
 
-2. Navigate to the project directory:
+2. **Install dependencies:**
    ```bash
-   cd knext
+   npm install
    ```
-3. Install dependencies:
+
+3. **Set up environment variables:**
+   Create a `.env.local` file in the root directory:
+   ```env
+   S3_USERNAME=your_s3_username
+   S3_PASSWORD=your_s3_password
+   S3_URL=your_s3_endpoint_url
+   ```
+
+4. **Run database migrations:**
    ```bash
-   npm i
+   npm run migrate:latest
    ```
-4. Start the development server:
+
+5. **Seed the database (optional):**
+   ```bash
+   npm run seed
+   ```
+
+6. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-Now, your server should be running on [http://localhost:3000](http://localhost:3000). Open your browser and visit the address to see your starter in action!
+Visit [http://localhost:3000](http://localhost:3000) to see the application running!
 
-## Database Migrations
+## 📜 Available Scripts
 
-This starter uses KNEX for managing database migrations, which helps in version controlling your database schema. Below are the commands available in `package.json` to handle migrations:
+- **`npm run dev`** - Start development server
+- **`npm run build`** - Build for production
+- **`npm run start`** - Start production server
+- **`npm run lint`** - Run ESLint
 
-- **`npm run migrate:make <name>`**: Create a new migration file with the specified `<name>`. This is where you define changes to your database schema.
-- **`npm run migrate:latest`**: Apply all pending migrations to your database. This updates your schema to the latest version.
-- **`npm run migrate:rollback`**: Roll back the last batch of migrations, allowing you to undo recent changes to the schema.
+### Database Management
 
-### Example Migration
+- **`npm run migrate:make <name>`** - Create a new migration
+- **`npm run migrate:latest`** - Run all pending migrations
+- **`npm run migrate:rollback`** - Rollback the last migration batch
+- **`npm run seed`** - Run database seeds
 
-Included in this starter is a migration for setting up a `users` table, tailored to work with NextAuth. Here's what the migration scripts look like:
+## 🗄️ Database Schema
 
-#### Up Migration (Create Table)
+The application uses SQLite with the following main tables:
 
+### Core Tables
+- **`users`** - Anonymous user tracking by IP/device
+- **`threads`** - Main discussion threads with optional images
+- **`replies`** - Responses to threads with optional images
+
+### Search Tables (FTS5)
+- **`threads_fts`** - Full-text search index for threads
+- **`replies_fts`** - Full-text search index for replies
+
+### Key Features
+- **Automatic FTS synchronization** via database triggers
+- **Image metadata storage** (dimensions, file size, type)
+- **Timestamp tracking** for creation and updates
+
+## 🔍 Search Functionality
+
+The application features a powerful search system:
+
+### Live Search
+- **Real-time search** with 300ms debounce
+- **Dropdown results** showing up to 8 matches
+- **Keyboard navigation** (↑↓ arrows, Enter, Escape)
+- **Click-outside-to-close** functionality
+
+### Full Search Page
+- **Pagination** with smart ellipsis (1, 2, 3 ... 98, 99, 100)
+- **Contextual snippets** with highlighted search terms
+- **Combined results** from both threads and replies
+- **Relevance ranking** using SQLite FTS5 scoring
+
+### Search Features
+- **Prefix matching** - "50 cha" matches "50 chars"
+- **Full-text search** across all content
+- **Highlighted results** with `<mark>` tags
+- **Fallback LIKE queries** for non-FTS compatible searches
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── search/            # Search results page
+│   └── thread/           # Thread detail pages
+├── components/            # React components
+│   ├── ui/               # Base UI components (buttons, etc.)
+│   ├── Header/           # Navigation header
+│   ├── ThreadCard/       # Thread display component
+│   ├── CreateThread/     # Thread creation form
+│   ├── LiveSearch/       # Real-time search component
+│   └── Pagination/       # Smart pagination component
+├── actions/              # Server actions
+├── services/             # Business logic
+│   ├── search.ts         # Search functionality
+│   └── s3.ts            # S3 upload service
+├── lib/                  # Utilities and configurations
+├── types/                # TypeScript type definitions
+├── utils/                # Helper functions
+├── migrations/           # Database migrations
+└── seeds/               # Database seed files
+```
+
+## 🖼️ Image Upload
+
+The application supports image uploads with the following features:
+
+- **Multiple formats** - JPEG, PNG, GIF, WebP
+- **File size limits** - Configurable per upload
+- **Automatic resizing** - Using Sharp for optimization
+- **S3 storage** - Scalable cloud storage
+- **Metadata extraction** - Dimensions, file size, format
+
+## 🎨 UI/UX Features
+
+- **Responsive design** - Works on mobile and desktop
+- **Clean aesthetics** - Inspired by classic imageboards
+- **Loading states** - Visual feedback during operations
+- **Error handling** - User-friendly error messages
+- **Accessibility** - Keyboard navigation and screen reader support
+
+## 🐳 Docker Support
+
+Run the application using Docker:
+
+```bash
+# Build and run with Docker Compose
+docker-compose up
+
+# Or build manually
+docker build -t boards .
+docker run -p 3000:3000 boards
+```
+
+## 🧪 Development
+
+### Seeding Test Data
+
+The application includes comprehensive seed data:
+
+- **100 users** with unique identifiers
+- **1000 threads** with varied content and images
+- **1000 replies** with searchable content
+- **Realistic timestamps** spread over 6 months
+- **Test search terms** like "tortilla" and "50 chars"
+
+### Adding Migrations
+
+Create a new migration:
+
+```bash
+npm run migrate:make add_new_feature
+```
+
+Example migration structure:
 ```javascript
-exports.up = function (knex) {
-  return knex.schema
-    .createTable("users", (table) => {
-      table.string("id").primary();
-      table.string("name").notNullable();
-      table.string("email").notNullable();
-      table.string("image");
-    })
-    .then(() => console.log("Migration done"));
+exports.up = function(knex) {
+  return knex.schema.createTable('new_table', (table) => {
+    table.increments('id');
+    table.string('name').notNullable();
+    table.timestamps(true, true);
+  });
+};
+
+exports.down = function(knex) {
+  return knex.schema.dropTable('new_table');
 };
 ```
 
-#### Down Migration (Drop Table)
+## 🤝 Contributing
 
-```javascript
-exports.down = function (knex) {
-  return knex.schema
-    .dropTable("users")
-    .then(() => console.log("Rollback done"));
-};
-```
-
-These migrations are crucial for managing the user data associated with the GitHub auth provider via NextAuth.
-
-## Docker
-
-To run the application using Docker, follow these steps:
-
-1. Build the Docker image:
-
-   ```bash
-   docker build -t knext .
-   ```
-
-2. Run the container:
-   ```bash
-   docker run -p 3000:3000 knext
-   ```
-
-Alternatively, you can use Docker Compose for a more streamlined setup:
-
-1. Ensure you have Docker Compose installed on your system.
-2. Run the following command in the project root:
-   ```bash
-   docker-compose up
-   ```
-
-This will build the image if it doesn't exist and start the container. The application will be accessible at http://localhost:3000.
-
-## Contributing 🤝
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License 📄
+## 📝 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+This project is licensed under the MIT License.
 
-## Acknowledgments 🎉
+## 🙏 Acknowledgments
 
-- Hat tip to anyone whose code was used
-- Inspiration
-- etc
+- Inspired by classic imageboard interfaces
+- Built with modern web technologies
+- Community-driven development approach
 
-We hope you enjoy using Knext as much as we enjoyed creating it! 🚀
+---
 
-## Resources
-
-- [Next Auth Docs](https://next-auth.js.org/getting-started/example)
-- [Knex Docs](https://knexjs.org/guide/)
-- [Tailwind CSS](https://tailwindcss.com/docs/installation)
+**Happy posting!** 🎉
