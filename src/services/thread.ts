@@ -1,4 +1,4 @@
-import type { Thread, PaginatedThreads, ImageAttachment, Reply } from "@/types/thread"
+import type { Thread, PaginatedThreads, PaginatedReplies, ImageAttachment, Reply } from "@/types/thread"
 import db from "@/lib/db"
 
 export async function getThreads(page: number = 1, perPage: number = 10): Promise<PaginatedThreads> {
@@ -218,4 +218,97 @@ export async function createReply(replyData: {
     };
 
     return createdReply;
+}
+
+export async function getReplies(page: number = 1, perPage: number = 20): Promise<PaginatedReplies> {
+    const offset = (page - 1) * perPage;
+
+    const totalCountResult = await db('replies').count('* as count').first();
+    const totalCount = totalCountResult?.count as number || 0;
+    const totalPages = Math.ceil(totalCount / perPage);
+
+    const rows = await db('replies')
+        .select('*')
+        .orderBy('created_at', 'desc')
+        .limit(perPage)
+        .offset(offset);
+
+    const replies: Reply[] = rows.map(row => {
+        const image = (row.image_url && row.image_url.trim() !== '') ? {
+            filename: row.image_name,
+            url: row.image_url,
+            size: row.image_size,
+            dimensions: row.image_dimensions,
+        } : undefined;
+        return {
+            id: row.id,
+            content: row.content,
+            createdAt: new Date(row.created_at),
+            image,
+        };
+    });
+
+    return { replies, currentPage: page, totalPages, totalCount };
+}
+
+export function getReply(id: number): Promise<Reply | undefined> {
+    return db('replies').where('id', id).first();
+}
+
+export async function updateThread(id: number, data: {
+    subject?: string;
+    content?: string;
+    image?: ImageAttachment | null;
+}): Promise<void> {
+    const update: any = {};
+    if (data.subject !== undefined) update.subject = data.subject;
+    if (data.content !== undefined) update.content = data.content;
+    if (data.image !== undefined) {
+        if (data.image) {
+            update.image_url = data.image.url;
+            update.image_name = data.image.filename;
+            update.image_size = data.image.size?.toString();
+            update.image_dimensions = data.image.dimensions;
+        } else {
+            update.image_url = null;
+            update.image_name = null;
+            update.image_size = null;
+            update.image_dimensions = null;
+        }
+    }
+    if (Object.keys(update).length > 0) {
+        await db('threads').where('id', id).update(update);
+    }
+}
+
+export async function updateReply(id: number, data: {
+    content?: string;
+    image?: ImageAttachment | null;
+}): Promise<void> {
+    const update: any = {};
+    if (data.content !== undefined) update.content = data.content;
+    if (data.image !== undefined) {
+        if (data.image) {
+            update.image_url = data.image.url;
+            update.image_name = data.image.filename;
+            update.image_size = data.image.size?.toString();
+            update.image_dimensions = data.image.dimensions;
+        } else {
+            update.image_url = null;
+            update.image_name = null;
+            update.image_size = null;
+            update.image_dimensions = null;
+        }
+    }
+    if (Object.keys(update).length > 0) {
+        await db('replies').where('id', id).update(update);
+    }
+}
+
+export function deleteThread(id: number): Promise<number> {
+    return db('threads').where('id', id).del();
+}
+
+export function deleteReply(id: number): Promise<number> {
+    return db('replies').where('id', id).del();
 }

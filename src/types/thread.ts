@@ -28,3 +28,10 @@ export type PaginatedThreads = {
     totalPages: number
     totalCount: number
 }
+
+export type PaginatedReplies = {
+    replies: Reply[]
+    currentPage: number
+    totalPages: number
+    totalCount: number
+}

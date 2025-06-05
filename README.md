@@ -54,6 +54,7 @@ A modern, fast imageboard application built with Next.js, featuring real-time se
    S3_USERNAME=your_s3_username
    S3_PASSWORD=your_s3_password
    S3_URL=your_s3_endpoint_url
+   ADMIN_TOKEN=your_admin_token
    ```
 
 4. **Run database migrations:**
@@ -195,6 +196,23 @@ The application includes comprehensive seed data:
 - **1000 replies** with searchable content
 - **Realistic timestamps** spread over 6 months
 - **Test search terms** like "tortilla" and "50 chars"
+
+## 🔐 Protected Admin API
+
+Use the `ADMIN_TOKEN` from `.env.local` as a bearer token to manage threads and replies.
+
+### Endpoints
+
+- `GET /api/admin/threads` - List threads (pagination with `page` and `limit`)
+- `POST /api/admin/threads` - Create a thread
+- `GET /api/admin/threads/:id` - Get thread with replies
+- `PUT /api/admin/threads/:id` - Update thread
+- `DELETE /api/admin/threads/:id` - Delete thread
+- `GET /api/admin/replies` - List replies
+- `POST /api/admin/replies` - Create a reply
+- `GET /api/admin/replies/:id` - Get a reply
+- `PUT /api/admin/replies/:id` - Update a reply
+- `DELETE /api/admin/replies/:id` - Delete a reply
 
 ### Adding Migrations
 
